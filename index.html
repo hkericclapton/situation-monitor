@@ -1066,21 +1066,43 @@
         // Fetch Polymarket predictions
         async function fetchPolymarket() {
             try {
-                const text = await fetchWithProxy('https://gamma-api.polymarket.com/markets?closed=false&limit=20');
+                const text = await fetchWithProxy('https://gamma-api.polymarket.com/markets?closed=false&order=volume&ascending=false&limit=25');
                 const data = JSON.parse(text);
 
-                // Filter for active markets with volume and sort by volume
+                if (!Array.isArray(data)) {
+                    console.error('Polymarket response is not an array');
+                    return [];
+                }
+
+                // Parse markets with flexible field handling
                 const markets = data
-                    .filter(m => m.active && m.volume && parseFloat(m.volume) > 10000)
-                    .sort((a, b) => parseFloat(b.volume) - parseFloat(a.volume))
+                    .filter(m => {
+                        const vol = parseFloat(m.volume || m.volumeNum || 0);
+                        return m.question && vol > 1000;
+                    })
                     .slice(0, 15)
-                    .map(m => ({
-                        question: m.question,
-                        yes: (parseFloat(m.outcomePrices?.[0] || m.bestAsk || 0) * 100).toFixed(0),
-                        no: (parseFloat(m.outcomePrices?.[1] || (1 - (m.bestAsk || 0))) * 100).toFixed(0),
-                        volume: parseFloat(m.volume),
-                        slug: m.slug
-                    }));
+                    .map(m => {
+                        // Handle different price formats
+                        let yesPrice = 0;
+                        if (m.outcomePrices && Array.isArray(m.outcomePrices)) {
+                            yesPrice = parseFloat(m.outcomePrices[0]) || 0;
+                        } else if (m.bestBid !== undefined) {
+                            yesPrice = parseFloat(m.bestBid) || 0;
+                        } else if (m.lastTradePrice !== undefined) {
+                            yesPrice = parseFloat(m.lastTradePrice) || 0;
+                        }
+
+                        // Ensure price is in 0-1 range, convert to percentage
+                        if (yesPrice > 1) yesPrice = yesPrice / 100;
+                        const yesPct = Math.round(yesPrice * 100);
+
+                        return {
+                            question: m.question,
+                            yes: yesPct,
+                            volume: parseFloat(m.volume || m.volumeNum || 0),
+                            slug: m.slug || m.id
+                        };
+                    });
 
                 return markets;
             } catch (error) {
