@@ -5826,25 +5826,30 @@
             // Build overlay HTML
             let overlaysHTML = '';
 
-            // Coordinate labels
-            [-60, -30, 0, 30, 60].forEach(lat => {
-                const pos = toPercent(-175, lat);
-                const label = lat === 0 ? '0°' : (lat > 0 ? `${lat}°N` : `${Math.abs(lat)}°S`);
-                overlaysHTML += `<div class="coord-label lat" style="top: ${pos.y}%; left: 0.5%;">${label}</div>`;
-            });
-            [-120, -60, 0, 60, 120].forEach(lon => {
-                const pos = toPercent(lon, -85);
-                const label = lon === 0 ? '0°' : (lon > 0 ? `${lon}°E` : `${Math.abs(lon)}°W`);
-                overlaysHTML += `<div class="coord-label lon" style="left: ${pos.x}%; bottom: 1%;">${label}</div>`;
-            });
+            // Coordinate labels (global view only)
+            if (!isUSView) {
+                [-60, -30, 0, 30, 60].forEach(lat => {
+                    const pos = toPercent(-175, lat);
+                    if (!pos) return;
+                    const label = lat === 0 ? '0°' : (lat > 0 ? `${lat}°N` : `${Math.abs(lat)}°S`);
+                    overlaysHTML += `<div class="coord-label lat" style="top: ${pos.y}%; left: 0.5%;">${label}</div>`;
+                });
+                [-120, -60, 0, 60, 120].forEach(lon => {
+                    const pos = toPercent(lon, -85);
+                    if (!pos) return;
+                    const label = lon === 0 ? '0°' : (lon > 0 ? `${lon}°E` : `${Math.abs(lon)}°W`);
+                    overlaysHTML += `<div class="coord-label lon" style="left: ${pos.x}%; bottom: 1%;">${label}</div>`;
+                });
+            }
 
-            // News density heatmap blobs
-            if (mapLayers.density) {
+            // News density heatmap blobs (global view only)
+            if (mapLayers.density && !isUSView) {
                 const densityScores = calculateNewsDensity(allNews);
                 NEWS_REGIONS.forEach(region => {
                     const score = densityScores[region.id] || 0;
                     if (score > 0) {
                         const pos = toPercent(region.lon, region.lat);
+                        if (!pos) return;
                         let level = 'low';
                         let size = region.radius;
                         if (score >= 10) {
