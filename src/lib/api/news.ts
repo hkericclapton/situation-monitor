@@ -27,6 +27,21 @@ function delay(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Parse GDELT date format (20251202T224500Z) to valid Date
+ */
+function parseGdeltDate(dateStr: string): Date {
+	if (!dateStr) return new Date();
+	// Convert 20251202T224500Z to 2025-12-02T22:45:00Z
+	const match = dateStr.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/);
+	if (match) {
+		const [, year, month, day, hour, min, sec] = match;
+		return new Date(`${year}-${month}-${day}T${hour}:${min}:${sec}Z`);
+	}
+	// Fallback to standard parsing
+	return new Date(dateStr);
+}
+
 interface GdeltArticle {
 	title: string;
 	url: string;
@@ -54,12 +69,14 @@ function transformGdeltArticle(
 	const urlHash = article.url ? hashCode(article.url) : Math.random().toString(36).slice(2);
 	const uniqueId = `gdelt-${category}-${urlHash}-${index}`;
 
+	const parsedDate = parseGdeltDate(article.seendate);
+
 	return {
 		id: uniqueId,
 		title,
 		link: article.url,
 		pubDate: article.seendate,
-		timestamp: article.seendate ? new Date(article.seendate).getTime() : Date.now(),
+		timestamp: parsedDate.getTime(),
 		source: source || article.domain || 'Unknown',
 		category,
 		isAlert: !!alert,

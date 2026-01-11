@@ -5,6 +5,17 @@
 import { browser } from '$app/environment';
 
 /**
+ * Finnhub API key
+ * Get your free key at: https://finnhub.io/
+ * Free tier: 60 calls/minute
+ */
+export const FINNHUB_API_KEY = browser
+	? (import.meta.env?.VITE_FINNHUB_API_KEY ?? '')
+	: (process.env.VITE_FINNHUB_API_KEY ?? '');
+
+export const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
+
+/**
  * Check if we're in development mode
  * Uses import.meta.env which is available in both browser and test environments
  */
@@ -12,8 +23,11 @@ const isDev = browser ? (import.meta.env?.DEV ?? false) : false;
 
 /**
  * CORS proxy URL for external API requests
+ * Uses public proxy in development (custom proxy doesn't allow localhost)
  */
-export const CORS_PROXY_URL = 'https://situation-monitor-proxy.seanthielen-e.workers.dev/?url=';
+export const CORS_PROXY_URL = isDev
+	? 'https://corsproxy.io/?url='
+	: 'https://situation-monitor-proxy.seanthielen-e.workers.dev/?url=';
 
 /**
  * API request delays (ms) to avoid rate limiting

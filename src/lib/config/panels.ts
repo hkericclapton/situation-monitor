@@ -28,6 +28,7 @@ export type PanelId =
 	| 'venezuela'
 	| 'greenland'
 	| 'iran'
+	| 'leaders'
 	| 'intel'
 	| 'correlation'
 	| 'narrative';
@@ -53,6 +54,7 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 	venezuela: { name: 'Venezuela Situation', priority: 2 },
 	greenland: { name: 'Greenland Situation', priority: 2 },
 	iran: { name: 'Iran Situation', priority: 2 },
+	leaders: { name: 'World Leaders', priority: 1 },
 	intel: { name: 'Intel Feed', priority: 2 },
 	correlation: { name: 'Correlation Engine', priority: 1 },
 	narrative: { name: 'Narrative Tracker', priority: 1 }

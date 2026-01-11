@@ -18,7 +18,9 @@
 		ContractsPanel,
 		LayoffsPanel,
 		IntelPanel,
-		SituationPanel
+		SituationPanel,
+		WorldLeadersPanel,
+	PrinterPanel
 	} from '$lib/components/panels';
 	import {
 		news,
@@ -39,10 +41,11 @@
 		fetchPolymarket,
 		fetchWhaleTransactions,
 		fetchGovContracts,
-		fetchLayoffs
+		fetchLayoffs,
+		fetchWorldLeaders
 	} from '$lib/api';
 	import type { Prediction, WhaleTransaction, Contract, Layoff } from '$lib/api';
-	import type { CustomMonitor } from '$lib/types';
+	import type { CustomMonitor, WorldLeader } from '$lib/types';
 
 	// Modal state
 	let settingsOpen = $state(false);
@@ -55,6 +58,8 @@
 	let whales = $state<WhaleTransaction[]>([]);
 	let contracts = $state<Contract[]>([]);
 	let layoffs = $state<Layoff[]>([]);
+	let leaders = $state<WorldLeader[]>([]);
+	let leadersLoading = $state(false);
 
 	// Derived data for panels that need aggregated news
 	const allNewsItems = $derived([
@@ -108,6 +113,18 @@
 			layoffs = layoffsData;
 		} catch (error) {
 			console.error('Failed to load misc data:', error);
+		}
+	}
+
+	async function loadWorldLeaders() {
+		if (!isPanelVisible('leaders')) return;
+		leadersLoading = true;
+		try {
+			leaders = await fetchWorldLeaders();
+		} catch (error) {
+			console.error('Failed to load world leaders:', error);
+		} finally {
+			leadersLoading = false;
 		}
 	}
 
@@ -170,6 +187,7 @@
 		loadNews();
 		loadMarkets();
 		loadMiscData();
+		loadWorldLeaders();
 		refresh.setupAutoRefresh(handleRefresh);
 
 		return () => {
@@ -270,24 +288,17 @@
 				</div>
 			{/if}
 
-			<!-- Custom Monitors -->
-			{#if isPanelVisible('monitors')}
-				<div class="panel-slot">
-					<MonitorsPanel
-						monitors={$monitors.monitors}
-						matches={$monitors.matches}
-						onCreateMonitor={handleCreateMonitor}
-						onEditMonitor={handleEditMonitor}
-						onDeleteMonitor={handleDeleteMonitor}
-						onToggleMonitor={handleToggleMonitor}
-					/>
-				</div>
-			{/if}
-
 			<!-- Intel Panel -->
 			{#if isPanelVisible('intel')}
 				<div class="panel-slot">
 					<IntelPanel />
+				</div>
+			{/if}
+
+			<!-- World Leaders Panel -->
+			{#if isPanelVisible('leaders')}
+				<div class="panel-slot">
+					<WorldLeadersPanel {leaders} loading={leadersLoading} />
 				</div>
 			{/if}
 
@@ -380,6 +391,27 @@
 			{#if isPanelVisible('layoffs')}
 				<div class="panel-slot">
 					<LayoffsPanel {layoffs} />
+				</div>
+			{/if}
+
+			<!-- Money Printer Panel -->
+			{#if isPanelVisible('printer')}
+				<div class="panel-slot">
+					<PrinterPanel />
+				</div>
+			{/if}
+
+			<!-- Custom Monitors (always last) -->
+			{#if isPanelVisible('monitors')}
+				<div class="panel-slot">
+					<MonitorsPanel
+						monitors={$monitors.monitors}
+						matches={$monitors.matches}
+						onCreateMonitor={handleCreateMonitor}
+						onEditMonitor={handleEditMonitor}
+						onDeleteMonitor={handleDeleteMonitor}
+						onToggleMonitor={handleToggleMonitor}
+					/>
 				</div>
 			{/if}
 		</Dashboard>

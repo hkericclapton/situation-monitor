@@ -45,6 +45,7 @@ export const PRESETS: Record<string, Preset> = {
 		panels: [
 			'map',
 			'intel',
+			'leaders',
 			'politics',
 			'gov',
 			'venezuela',
@@ -59,7 +60,7 @@ export const PRESETS: Record<string, Preset> = {
 		name: 'Intelligence Analyst',
 		icon: '🔍',
 		description: 'Deep analysis, pattern detection, and narrative tracking',
-		panels: ['map', 'intel', 'correlation', 'narrative', 'mainchar', 'politics']
+		panels: ['map', 'intel', 'leaders', 'correlation', 'narrative', 'mainchar', 'politics']
 	},
 	minimal: {
 		id: 'minimal',
@@ -94,6 +95,7 @@ export const PRESETS: Record<string, Preset> = {
 			'venezuela',
 			'greenland',
 			'iran',
+			'leaders',
 			'intel',
 			'correlation',
 			'narrative'

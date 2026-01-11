@@ -299,3 +299,29 @@ export interface SettingsState {
 	panelOrder: string[];
 	theme: 'dark' | 'light';
 }
+
+/**
+ * News item for a world leader
+ */
+export interface LeaderNews {
+	source: string;
+	title: string;
+	link: string;
+	pubDate: string;
+}
+
+/**
+ * World leader tracking data
+ */
+export interface WorldLeader {
+	id: string;
+	name: string;
+	title: string;
+	country: string;
+	flag: string;
+	keywords: string[];
+	since: string;
+	party: string;
+	focus?: string[];
+	news?: LeaderNews[];
+}
