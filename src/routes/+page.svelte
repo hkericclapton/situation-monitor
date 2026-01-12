@@ -22,19 +22,7 @@
 		WorldLeadersPanel,
 		PrinterPanel
 	} from '$lib/components/panels';
-	import {
-		news,
-		politicsNews,
-		techNews,
-		financeNews,
-		govNews,
-		aiNews,
-		intelNews,
-		markets,
-		monitors,
-		settings,
-		refresh
-	} from '$lib/stores';
+	import { news, markets, monitors, settings, refresh, allNewsItems } from '$lib/stores';
 	import {
 		fetchAllNews,
 		fetchAllMarkets,
@@ -61,16 +49,6 @@
 	let layoffs = $state<Layoff[]>([]);
 	let leaders = $state<WorldLeader[]>([]);
 	let leadersLoading = $state(false);
-
-	// Derived data for panels that need aggregated news
-	const allNewsItems = $derived([
-		...$politicsNews.items,
-		...$techNews.items,
-		...$financeNews.items,
-		...$govNews.items,
-		...$aiNews.items,
-		...$intelNews.items
-	]);
 
 	// Data fetching
 	async function loadNews() {
@@ -186,10 +164,17 @@
 			onboardingOpen = true;
 		}
 
-		loadNews();
-		loadMarkets();
-		loadMiscData();
-		loadWorldLeaders();
+		// Load initial data and track as refresh
+		async function initialLoad() {
+			refresh.startRefresh();
+			try {
+				await Promise.all([loadNews(), loadMarkets(), loadMiscData(), loadWorldLeaders()]);
+				refresh.endRefresh();
+			} catch (error) {
+				refresh.endRefresh([String(error)]);
+			}
+		}
+		initialLoad();
 		refresh.setupAutoRefresh(handleRefresh);
 
 		return () => {
@@ -204,7 +189,7 @@
 </svelte:head>
 
 <div class="app">
-	<Header onRefresh={handleRefresh} onSettingsClick={() => (settingsOpen = true)} />
+	<Header onSettingsClick={() => (settingsOpen = true)} />
 
 	<main class="main-content">
 		<Dashboard>
@@ -280,13 +265,13 @@
 
 			{#if isPanelVisible('correlation')}
 				<div class="panel-slot">
-					<CorrelationPanel news={allNewsItems} />
+					<CorrelationPanel news={$allNewsItems} />
 				</div>
 			{/if}
 
 			{#if isPanelVisible('narrative')}
 				<div class="panel-slot">
-					<NarrativePanel news={allNewsItems} />
+					<NarrativePanel news={$allNewsItems} />
 				</div>
 			{/if}
 
@@ -314,7 +299,7 @@
 							subtitle: 'Humanitarian crisis monitoring',
 							criticalKeywords: ['maduro', 'caracas', 'venezuela', 'guaido']
 						}}
-						news={allNewsItems.filter(
+						news={$allNewsItems.filter(
 							(n) =>
 								n.title.toLowerCase().includes('venezuela') ||
 								n.title.toLowerCase().includes('maduro')
@@ -332,7 +317,7 @@
 							subtitle: 'Arctic geopolitics monitoring',
 							criticalKeywords: ['greenland', 'arctic', 'nuuk', 'denmark']
 						}}
-						news={allNewsItems.filter(
+						news={$allNewsItems.filter(
 							(n) =>
 								n.title.toLowerCase().includes('greenland') ||
 								n.title.toLowerCase().includes('arctic')
@@ -361,7 +346,7 @@
 								'khamenei'
 							]
 						}}
-						news={allNewsItems.filter(
+						news={$allNewsItems.filter(
 							(n) =>
 								n.title.toLowerCase().includes('iran') ||
 								n.title.toLowerCase().includes('tehran') ||

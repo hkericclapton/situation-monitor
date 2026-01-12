@@ -68,11 +68,12 @@ const DEFAULT_AUTO_REFRESH_INTERVAL = 60 * 60 * 1000; // 1 hour
 const STORAGE_KEY = 'refreshSettings';
 
 // Load settings from localStorage
-function loadSettings(): { autoRefreshEnabled: boolean; autoRefreshInterval: number } {
+function loadSettings(): { autoRefreshEnabled: boolean; autoRefreshInterval: number; lastRefresh: number | null } {
 	if (!browser) {
 		return {
 			autoRefreshEnabled: true,
-			autoRefreshInterval: DEFAULT_AUTO_REFRESH_INTERVAL
+			autoRefreshInterval: DEFAULT_AUTO_REFRESH_INTERVAL,
+			lastRefresh: null
 		};
 	}
 
@@ -82,7 +83,8 @@ function loadSettings(): { autoRefreshEnabled: boolean; autoRefreshInterval: num
 			const parsed = JSON.parse(data);
 			return {
 				autoRefreshEnabled: parsed.autoRefreshEnabled ?? true,
-				autoRefreshInterval: parsed.autoRefreshInterval ?? DEFAULT_AUTO_REFRESH_INTERVAL
+				autoRefreshInterval: parsed.autoRefreshInterval ?? DEFAULT_AUTO_REFRESH_INTERVAL,
+				lastRefresh: parsed.lastRefresh ?? null
 			};
 		}
 	} catch (e) {
@@ -91,20 +93,24 @@ function loadSettings(): { autoRefreshEnabled: boolean; autoRefreshInterval: num
 
 	return {
 		autoRefreshEnabled: true,
-		autoRefreshInterval: DEFAULT_AUTO_REFRESH_INTERVAL
+		autoRefreshInterval: DEFAULT_AUTO_REFRESH_INTERVAL,
+		lastRefresh: null
 	};
 }
 
 // Save settings to localStorage
-function saveSettings(enabled: boolean, interval: number): void {
+function saveSettings(enabled: boolean, interval: number, lastRefresh?: number | null): void {
 	if (!browser) return;
 
 	try {
+		const existing = localStorage.getItem(STORAGE_KEY);
+		const existingData = existing ? JSON.parse(existing) : {};
 		localStorage.setItem(
 			STORAGE_KEY,
 			JSON.stringify({
 				autoRefreshEnabled: enabled,
-				autoRefreshInterval: interval
+				autoRefreshInterval: interval,
+				lastRefresh: lastRefresh ?? existingData.lastRefresh ?? null
 			})
 		);
 	} catch (e) {
@@ -119,7 +125,7 @@ function createInitialState(): RefreshState {
 	return {
 		isRefreshing: false,
 		currentStage: null,
-		lastRefresh: null,
+		lastRefresh: settings.lastRefresh,
 		categoryStates: {},
 		autoRefreshEnabled: settings.autoRefreshEnabled,
 		autoRefreshInterval: settings.autoRefreshInterval,
@@ -192,10 +198,11 @@ function createRefreshStore() {
 		endRefresh(errors: string[] = []) {
 			const duration = refreshStartTime ? Date.now() - refreshStartTime : 0;
 			refreshStartTime = null;
+			const now = Date.now();
 
 			update((state) => {
 				const historyEntry = {
-					timestamp: Date.now(),
+					timestamp: now,
 					duration,
 					success: errors.length === 0,
 					errors
@@ -204,11 +211,14 @@ function createRefreshStore() {
 				// Keep last 10 refresh entries
 				const newHistory = [historyEntry, ...state.refreshHistory].slice(0, 10);
 
+				// Persist lastRefresh to localStorage
+				saveSettings(state.autoRefreshEnabled, state.autoRefreshInterval, now);
+
 				return {
 					...state,
 					isRefreshing: false,
 					currentStage: null,
-					lastRefresh: Date.now(),
+					lastRefresh: now,
 					refreshHistory: newHistory
 				};
 			});

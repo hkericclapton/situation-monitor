@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Modal from './Modal.svelte';
-	import { settings, refresh, autoRefreshEnabled } from '$lib/stores';
+	import { settings } from '$lib/stores';
 	import { PANELS, type PanelId } from '$lib/config';
 
 	interface Props {
@@ -18,24 +18,10 @@
 	function handleResetPanels() {
 		settings.reset();
 	}
-
-	function handleToggleAutoRefresh() {
-		refresh.toggleAutoRefresh();
-	}
 </script>
 
 <Modal {open} title="Settings" {onClose}>
 	<div class="settings-sections">
-		<section class="settings-section">
-			<h3 class="section-title">Auto Refresh</h3>
-			<div class="setting-row">
-				<label class="toggle-label">
-					<input type="checkbox" checked={$autoRefreshEnabled} onchange={handleToggleAutoRefresh} />
-					<span>Enable auto-refresh (hourly)</span>
-				</label>
-			</div>
-		</section>
-
 		<section class="settings-section">
 			<h3 class="section-title">Enabled Panels</h3>
 			<p class="section-desc">Toggle panels on/off to customize your dashboard</p>
@@ -94,23 +80,6 @@
 		font-size: 0.65rem;
 		color: var(--text-muted);
 		margin: 0;
-	}
-
-	.setting-row {
-		padding: 0.5rem 0;
-	}
-
-	.toggle-label {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		cursor: pointer;
-		font-size: 0.7rem;
-		color: var(--text-primary);
-	}
-
-	.toggle-label input {
-		accent-color: var(--accent);
 	}
 
 	.panels-grid {

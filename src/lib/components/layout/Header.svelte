@@ -1,26 +1,16 @@
 <script lang="ts">
-	import { refresh, isRefreshing, lastRefresh, autoRefreshEnabled } from '$lib/stores';
-	import { timeAgo } from '$lib/utils';
+	import { isRefreshing, lastRefresh } from '$lib/stores';
 
 	interface Props {
-		onRefresh?: () => void;
 		onSettingsClick?: () => void;
 	}
 
-	let { onRefresh, onSettingsClick }: Props = $props();
-
-	function handleRefresh() {
-		if (onRefresh && !$isRefreshing) {
-			onRefresh();
-		}
-	}
-
-	function handleToggleAutoRefresh() {
-		refresh.toggleAutoRefresh(onRefresh);
-	}
+	let { onSettingsClick }: Props = $props();
 
 	const lastRefreshText = $derived(
-		$lastRefresh ? `Last: ${timeAgo($lastRefresh)}` : 'Never refreshed'
+		$lastRefresh
+			? `Last updated: ${new Date($lastRefresh).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
+			: 'Never refreshed'
 	);
 </script>
 
@@ -40,26 +30,6 @@
 	</div>
 
 	<div class="header-right">
-		<button
-			class="header-btn"
-			class:active={$autoRefreshEnabled}
-			onclick={handleToggleAutoRefresh}
-			title={$autoRefreshEnabled ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
-		>
-			<span class="btn-icon">⟳</span>
-			<span class="btn-label">{$autoRefreshEnabled ? 'Auto' : 'Manual'}</span>
-		</button>
-
-		<button
-			class="header-btn refresh-btn"
-			onclick={handleRefresh}
-			disabled={$isRefreshing}
-			title="Refresh all data"
-		>
-			<span class="btn-icon" class:spinning={$isRefreshing}>↻</span>
-			<span class="btn-label">Refresh</span>
-		</button>
-
 		<button class="header-btn settings-btn" onclick={onSettingsClick} title="Settings">
 			<span class="btn-icon">⚙</span>
 			<span class="btn-label">Settings</span>
@@ -146,34 +116,13 @@
 		font-size: 0.65rem;
 	}
 
-	.header-btn:hover:not(:disabled) {
+	.header-btn:hover {
 		background: var(--border);
 		color: var(--text-primary);
 	}
 
-	.header-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	.header-btn.active {
-		background: rgba(var(--accent-rgb), 0.1);
-		border-color: var(--accent);
-		color: var(--accent);
-	}
-
 	.btn-icon {
 		font-size: 0.8rem;
-	}
-
-	.btn-icon.spinning {
-		animation: spin 1s linear infinite;
-	}
-
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
 	}
 
 	.btn-label {

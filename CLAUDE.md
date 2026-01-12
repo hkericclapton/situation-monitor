@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Development Workflow
+
+When working on a new feature:
+1. Create a new branch before making any changes
+2. Make all commits on that feature branch
+3. Before opening a PR, run the `code-simplifier` agent to clean up the code
+
 ## Build & Development Commands
 
 ```bash
